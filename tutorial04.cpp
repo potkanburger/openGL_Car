@@ -215,8 +215,8 @@ int main( void )
 
 	float x_tmp, y_tmp;
 
-	float pas = 0.2f;
-	float pas_init = 0.2f;
+	float pas = 0.1f;
+	float pas_init = 0.1f;
 	float pas_max = 0.5f;
 	float pas_lat = 0.1f;
 	float r_avant_arriere = 0.0f;
@@ -239,7 +239,13 @@ int main( void )
 		// Move forward
 		if (glfwGetKey( window, GLFW_KEY_Z ) == GLFW_PRESS){
 			r_avant_arriere-=5.0f;
-			pas = pas*1.1f;
+			if (pas < 0.0f){
+				pas = pas_init;
+			}
+			else{
+				pas = pas*1.05f;
+			}
+			
 			if (pas > pas_max){
 				pas = pas_max;
 			}
@@ -272,11 +278,17 @@ int main( void )
 		// Move backward
 		if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
 			r_avant_arriere+=5.0f;
-			pas = pas*1.1f;
-			if (pas > pas_max){
-				pas = pas_max;
+			if (pas > 0.0f){
+				pas = -pas_init;
 			}
-			x= -pas;
+			else{
+				pas = pas*1.05f;
+			}
+
+			if (pas < -pas_max){
+				pas = -pas_max;
+			}
+			x= pas;
 			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
 				if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
 					r_voiture_gd = 0.0f;
@@ -348,7 +360,6 @@ int main( void )
 			}
 
 			if (abs(r_voiture_gd)>0.0f){
-				//r_voiture_gd = r_voiture_gd / 1.1f;
 				r_voiture_gd = 0.0f;
 			}
 
