@@ -1,4 +1,7 @@
-Pour l'instant je n'ai pas réussi à faire en sorte qu'on ait un dossier à nous seul qui fonctionne.
-En revanche, si vous arrivez a faire tourner les tutos vus en TP, en remplaçant le fichier tutorial04.cpp 
-du dossier "U:\TutoriauxOpenGL\tutorial04_colored_cube" par le fichier présent dans ce repository vous pourrez visualiser/modifier le code.
-Have fun !
+Projet fonctionnel,
+Mettre le dossier openGLwrappers à la racine de votre disque dur.
+modifier les chemins des librairies et includes dans visual studio (courage ca m'a pris entre 2 et 3 siècles seulement...).
+
+Le code "principal" est dans le sous dossier OpenGLTest (main.cpp)
+
+HAVE FUN !
