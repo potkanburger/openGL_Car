@@ -1,6 +1,7 @@
 // Include standard headers
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 // Include GLEW
 #include <GL/glew.h>
@@ -18,6 +19,8 @@ using namespace glm;
 #include <common/shader.hpp>
 
 #define PI 3.14159265F
+
+bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]);
 
 int main( void )
 {
@@ -74,7 +77,7 @@ int main( void )
 	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 	// Camera matrix
 	glm::mat4 View       = glm::lookAt(
-								glm::vec3(4,3,-3), // Camera is at (4,3,-3), in World Space
+								glm::vec3(8,6,-6), // Camera is at (4,3,-3), in World Space
 								glm::vec3(0,0,0), // and looks at the origin
 								glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 						   );
@@ -168,6 +171,25 @@ int main( void )
 		 1.0f,-1.0f, 1.0f
 	};
 
+	static const GLfloat g_vertex_buffer_data_HitboxVoiture[] = {
+		-1.0f, 2.0f, 1.0f,
+		 1.0f, 2.0f, 1.0f,
+		-1.0f, 2.0f,-1.0f,
+		 1.0f, 2.0f,-1.0f,
+		-1.0f, 2.0f,-1.0f,
+		 1.0f, 2.0f, 1.0f,
+	};
+
+
+	static const GLfloat g_vertex_buffer_data_ObstacleTrou[] = {
+		2.0f, 2.0f, 1.0f,
+		4.0f, 2.0f, 1.0f,
+		2.0f, 2.0f, -1.0f,
+		4.0f, 2.0f, -1.0f,
+		2.0f, 2.0f, -1.0f,
+		4.0f, 2.0f, 1.0f,
+	};
+
 	// One color for each vertex. They were generated randomly.
 	static GLfloat g_color_buffer_data_Cube1[12*3*3];
 	for(int v=0;v<12*3;v++){
@@ -183,6 +205,20 @@ int main( void )
 		g_color_buffer_data_Roue[3*v+1] = v/72.0f+0.10f;
 		g_color_buffer_data_Roue[3*v+2] = 0.05f;
 
+	}
+
+	static GLfloat g_color_buffer_data_HitboxVoiture[6 * 3];
+	for (int v = 0; v< 6; v++){
+		g_color_buffer_data_HitboxVoiture[3 * v + 0] = 0.60f;
+		g_color_buffer_data_HitboxVoiture[3 * v + 1] = 0.10f;
+		g_color_buffer_data_HitboxVoiture[3 * v + 2] = 0.05f;
+	}
+
+	static GLfloat g_color_buffer_data_ObstacleTrou[6 * 3];
+	for (int v = 0; v< 6; v++){
+		g_color_buffer_data_HitboxVoiture[3 * v + 0] = 0.60f;
+		g_color_buffer_data_HitboxVoiture[3 * v + 1] = 0.00f;
+		g_color_buffer_data_HitboxVoiture[3 * v + 2] = 0.85f;
 	}
 
 
@@ -209,11 +245,32 @@ int main( void )
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
 
 
+	GLuint vertexbufferHitboxVoiture;
+	glGenBuffers(1, &vertexbufferHitboxVoiture);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbufferHitboxVoiture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_HitboxVoiture), g_vertex_buffer_data_HitboxVoiture, GL_STATIC_DRAW);
+
+
+	GLuint colorbufferHitboxVoiture;
+	glGenBuffers(1, &colorbufferHitboxVoiture);
+	glBindBuffer(GL_ARRAY_BUFFER, colorbufferHitboxVoiture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_HitboxVoiture), g_color_buffer_data_HitboxVoiture, GL_STATIC_DRAW);
+
+	GLuint vertexbufferObstacleTrou;
+	glGenBuffers(1, &vertexbufferObstacleTrou);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbufferObstacleTrou);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_ObstacleTrou), g_vertex_buffer_data_ObstacleTrou, GL_STATIC_DRAW);
+
+
+	GLuint colorbufferObstacleTrou;
+	glGenBuffers(1, &colorbufferObstacleTrou);
+	glBindBuffer(GL_ARRAY_BUFFER, colorbufferObstacleTrou);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_ObstacleTrou), g_color_buffer_data_ObstacleTrou, GL_STATIC_DRAW);
+
+
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
-
-	float x_tmp, y_tmp;
 
 	float pas = 0.1f;
 	float pas_init = 0.1f;
@@ -430,22 +487,40 @@ int main( void )
 			0,                  // stride
 			(void*)0            // array buffer offset
 		);
-
+		if (collision(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou)){
+			for (int v = 0; v<3 * 3; v++){
+				g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 2] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 3] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 4] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 5] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 6] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 7] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 8] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 9] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 10] = 0.1f;
+				g_color_buffer_data_Cube1[12 * v + 11] = 0.1f;
+			}
+		}
+		else{
+			for (int v = 0; v<3 * 3; v++){
+				g_color_buffer_data_Cube1[12 * v + 0] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 1] = 1.0f;
+				g_color_buffer_data_Cube1[12 * v + 2] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 3] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 4] = 1.0f;
+				g_color_buffer_data_Cube1[12 * v + 5] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 6] = x;
+				g_color_buffer_data_Cube1[12 * v + 7] = 0.f;
+				g_color_buffer_data_Cube1[12 * v + 8] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 9] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 10] = 0.0f;
+				g_color_buffer_data_Cube1[12 * v + 11] = 1 - x;
+			}
+		}
 		// 2nd attribute buffer : colors
-		for(int v=0;v<3*3;v++){
-			g_color_buffer_data_Cube1[12*v+0] = 0.0f;
-			g_color_buffer_data_Cube1[12*v+1] = 1.0f;
-			g_color_buffer_data_Cube1[12*v+2] = 0.0f;
-			g_color_buffer_data_Cube1[12*v+3] = 0.0f;
-			g_color_buffer_data_Cube1[12*v+4] = 1.0f;
-			g_color_buffer_data_Cube1[12*v+5] = 0.0f;
-			g_color_buffer_data_Cube1[12*v+6] = x;
-			g_color_buffer_data_Cube1[12*v+7] = 0.f;
-			g_color_buffer_data_Cube1[12*v+8] = 0.f;
-			g_color_buffer_data_Cube1[12*v+9] = 0.f;
-			g_color_buffer_data_Cube1[12*v+10] = 0.0f;
-			g_color_buffer_data_Cube1[12*v+11] = 1-x;
-		}		
+		
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Cube1), g_color_buffer_data_Cube1, GL_STATIC_DRAW);
@@ -612,6 +687,82 @@ int main( void )
 		glDisableVertexAttribArray(1);
 
 		
+		//-----------------------------------------------------------------------HITBOX---------------------------------------------------------------------------------------
+
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferHitboxVoiture);
+		glVertexAttribPointer(
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+			);
+
+		
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, colorbufferHitboxVoiture);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_HitboxVoiture), g_color_buffer_data_HitboxVoiture, GL_STATIC_DRAW);
+		glVertexAttribPointer(
+			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+			3,                                // size
+			GL_FLOAT,                         // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
+
+		// Draw the triangle !
+		glDrawArrays(GL_TRIANGLES, 0, 2 * 3); // 2*3 indices starting at 0 -> 2 triangles
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		
+
+		//-----------------------------------------------------------------------OBSCTACLE (TROU)-----------------------------------------------------------------------------
+
+
+		// Send our transformation to the currently bound shader, 
+		MVP = Projection * View * Model;
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferObstacleTrou);
+		glVertexAttribPointer(
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+			);
+
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, colorbufferObstacleTrou);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_ObstacleTrou), g_color_buffer_data_ObstacleTrou, GL_STATIC_DRAW);
+		glVertexAttribPointer(
+			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+			3,                                // size
+			GL_FLOAT,                         // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
+
+		// Draw the triangle !
+		glDrawArrays(GL_TRIANGLES, 0, 2 * 3); // 2*3 indices starting at 0 -> 2 triangles
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -636,3 +787,46 @@ int main( void )
 	return 0;
 }
 
+bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]){
+	float bound_obs_min_x = obstacle[0];
+	float bound_obs_min_y = obstacle[1];
+	float bound_obs_min_z = obstacle[2];
+
+	float bound_obs_max_x = obstacle[0];
+	float bound_obs_max_y = obstacle[1];
+	float bound_obs_max_z = obstacle[2];
+
+	int inter[3] = { 0, 0, 0 };
+
+	for (int i = 1; i < 6; i++){
+			bound_obs_min_x = glm::min(bound_obs_min_x, obstacle[3 * i + 0]);
+			bound_obs_min_y = glm::min(bound_obs_min_y, obstacle[3 * i + 1]);
+			bound_obs_min_z = glm::min(bound_obs_min_z, obstacle[3 * i + 2]);
+
+			if (obstacle[3 * i + 0]>bound_obs_max_x){
+				bound_obs_max_x = obstacle[3 * i + 0];
+			}
+			bound_obs_max_y = glm::max(bound_obs_max_y, obstacle[3 * i + 1]);
+			bound_obs_max_z = glm::max(bound_obs_max_z, obstacle[3 * i + 2]);
+	}
+
+	glm::vec4 tmp;
+
+	for (int i = 0; i < 6; i++){
+		tmp = MVP_obj*glm::vec4(objet[3 * i + 0], objet[3 * i + 1], objet[3 * i + 2], 1.0f);
+
+		if (tmp.x >= bound_obs_min_x && tmp.x <= bound_obs_max_x){
+			inter[0] = 1;
+		}
+		if (tmp.y >= bound_obs_min_y && tmp.y <= bound_obs_max_y){
+			inter[1] = 1;
+		}
+		if (tmp.z >= bound_obs_min_z && tmp.z <= bound_obs_max_z){
+			inter[2] = 1;
+		}
+
+	}
+
+	return (inter[0] + inter[1] + inter[2]) ==3;
+	
+}
