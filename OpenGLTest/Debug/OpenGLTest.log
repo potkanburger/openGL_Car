@@ -1,16 +1,19 @@
-﻿Build started 14/10/2015 20:45:24.
-     1>Project "c:\Users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\OpenGLTest\OpenGLTest.vcxproj" on node 2 (Build target(s)).
+﻿Build started 14/10/2015 23:03:43.
+     1>Project "C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\OpenGLTest\OpenGLTest.vcxproj" on node 2 (Build target(s)).
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(388,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (OpenGLTest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IC:\openGLwrappers\glm /IC:\openGLwrappers\dependencies /IC:\openGLwrappers\glfw\include /IC:\openGLwrappers\glew\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\OpenGLTest\car_functions" /IC:\openGLwrappers\glm /IC:\openGLwrappers\dependencies /IC:\openGLwrappers\glfw\include /IC:\openGLwrappers\glew\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
+     1>c:\users\potkanburger\documents\visual studio 2013\projects\opengltest\opengltest\main.cpp(29): warning C4005: 'PI' : macro redefinition
+                 c:\users\potkanburger\documents\visual studio 2013\projects\opengltest\opengltest\car_functions\car_functions.h(27) : see previous definition of 'PI'
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\openGLwrappers\glfw\lib-vc2013" /LIBPATH:C:\openGLwrappers\glew\lib opengl32.lib glu32.lib glew32.lib glfw3.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"c:\users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.lib" /MACHINE:X86 Debug\main.obj
-     1>main.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/OPT:LBR' specification
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\openGLwrappers\glfw\lib-vc2013" /LIBPATH:C:\openGLwrappers\glew\lib opengl32.lib glu32.lib glew32.lib glfw3.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.lib" /MACHINE:X86 Debug\car_functions.obj
+         Debug\main.obj
+     1>car_functions.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/OPT:LBR' specification
      1>LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-         OpenGLTest.vcxproj -> c:\users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.exe
-     1>Done Building Project "c:\Users\potkanburger\documents\visual studio 2013\Projects\OpenGLTest\OpenGLTest\OpenGLTest.vcxproj" (Build target(s)).
+         OpenGLTest.vcxproj -> C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\Debug\OPENGL_Car.exe
+     1>Done Building Project "C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\OpenGLTest\OpenGLTest.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.89
+Time Elapsed 00:00:00.48

@@ -53,7 +53,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -71,7 +71,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\PotkanBurger\Documents\Visual Studio 2013\Projects\OpenGLTest\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -83,7 +83,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="car_functions\car_functions.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="car_functions\car_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
