@@ -24,9 +24,9 @@ GLFWwindow* window;
 #include <glm/gtx/rotate_vector.hpp>
 using namespace glm;
 
+
 #include <car_functions.h>
 
-#define PI 3.14159265F
 
 
 int main(void)
@@ -96,6 +96,8 @@ int main(void)
 	glm::mat4 MVP_RoueAvDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArGauche = Projection * View * Model;
+
+	vector<obs> obstacles;
 
 	// Our vertices. Tree consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
 	// A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
@@ -289,6 +291,12 @@ int main(void)
 
 	glm::mat4 myMatrix = Model;
 	glm::vec3 VectVitesse = glm::vec3(x, z, y);
+
+	obs voiture = { voiture.rayon = 0.0f, voiture.centre = glm::vec4(0.0f) };
+	obs obs1 = {obs1.rayon = 0.0f, obs1.centre = glm::vec4(0.0f)};
+	get_centre_rayon(g_vertex_buffer_data_ObstacleTrou, &obs1.rayon, &obs1.centre);
+	get_centre_rayon(g_vertex_buffer_data_HitboxVoiture, &voiture.rayon, &voiture.centre);
+	obstacles.push_back(obs1);
 
 	do{
 
@@ -494,7 +502,7 @@ int main(void)
 			0,                  // stride
 			(void*)0            // array buffer offset
 			);
-		if (collision(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou)){
+		if (collision2(voiture, myMatrix, obs1)){
 			for (int v = 0; v<3 * 3; v++){
 				g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
 				g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;

@@ -110,9 +110,7 @@ bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[
 		bound_obs_min_y = glm::min(bound_obs_min_y, obstacle[3 * i + 1]);
 		bound_obs_min_z = glm::min(bound_obs_min_z, obstacle[3 * i + 2]);
 
-		if (obstacle[3 * i + 0]>bound_obs_max_x){
-			bound_obs_max_x = obstacle[3 * i + 0];
-		}
+		bound_obs_max_x = glm::max(bound_obs_max_x, obstacle[3 * i + 0]);
 		bound_obs_max_y = glm::max(bound_obs_max_y, obstacle[3 * i + 1]);
 		bound_obs_max_z = glm::max(bound_obs_max_z, obstacle[3 * i + 2]);
 	}
@@ -136,4 +134,44 @@ bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[
 
 	return (inter[0] + inter[1] + inter[2]) == 3;
 
+}
+
+bool collision2(obs voiture, glm::mat4 MVP_obj, obs obstacle){// détection de collisions de sphères 
+	
+	glm::vec4 tmp;
+	tmp = MVP_obj*voiture.centre;
+	float distance = pow(tmp.x - obstacle.centre.x, 2) + pow(tmp.y - obstacle.centre.y, 2) + pow(tmp.z - obstacle.centre.z, 2);
+	return distance<=pow(voiture.rayon+obstacle.rayon, 2);
+}
+
+void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4 *centre){
+	float bound_obs_min_x = obstacle[0];
+	float bound_obs_min_y = obstacle[1];
+	float bound_obs_min_z = obstacle[2];
+
+	float bound_obs_max_x = obstacle[0];
+	float bound_obs_max_y = obstacle[1];
+	float bound_obs_max_z = obstacle[2];
+	float rayon_obstacle = 0.0f;
+
+	int inter[3] = { 0, 0, 0 };
+
+	for (int i = 1; i < 6; i++){
+		float tmp_x = obstacle[3 * i + 0];
+		float tmp_y = obstacle[3 * i + 1];
+		float tmp_z = obstacle[3 * i + 2];
+
+		bound_obs_min_x = glm::min(bound_obs_min_x, tmp_x);
+		bound_obs_min_y = glm::min(bound_obs_min_y, tmp_y);
+		bound_obs_min_z = glm::min(bound_obs_min_z, tmp_z);
+
+		bound_obs_max_x = glm::max(bound_obs_max_x, tmp_x);
+		bound_obs_max_y = glm::max(bound_obs_max_y, tmp_y);
+		bound_obs_max_z = glm::max(bound_obs_max_z, tmp_z);
+	}
+
+	rayon_obstacle = glm::max(abs(bound_obs_max_x - bound_obs_min_x), abs(bound_obs_max_y - bound_obs_min_y));
+	*rayon = glm::max(rayon_obstacle, abs(bound_obs_max_z - bound_obs_min_z));
+
+	*centre = glm::vec4((bound_obs_max_x + bound_obs_min_x) / 2, (bound_obs_max_y + bound_obs_min_y) / 2, (bound_obs_max_z + bound_obs_min_z) / 2, 1.0f);
 }

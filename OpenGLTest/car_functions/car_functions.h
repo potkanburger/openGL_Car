@@ -23,8 +23,16 @@ using namespace std;
 #include <glm/gtx/rotate_vector.hpp>
 using namespace glm;
 
+struct obs{
+	float rayon;
+	glm::vec4 centre;
+};
+
 
 #define PI 3.14159265F;
 
 bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]);
+bool collision2(obs voiture, glm::mat4 MVP_obj, obs obstacle);
+
+void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4* centre);
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path);
