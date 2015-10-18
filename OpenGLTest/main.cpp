@@ -9,6 +9,7 @@ using namespace std;
 
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 
 // Include GLEW
@@ -181,22 +182,22 @@ int main(void)
 	};
 
 	static const GLfloat g_vertex_buffer_data_HitboxVoiture[] = {
-		-1.0f, 2.0f, 1.0f,
-		1.0f, 2.0f, 1.0f,
-		-1.0f, 2.0f, -1.0f,
-		1.0f, 2.0f, -1.0f,
-		-1.0f, 2.0f, -1.0f,
-		1.0f, 2.0f, 1.0f,
+		-1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		-1.0f, 0.0f, -1.0f,
+		1.0f, 0.0f, -1.0f,
+		-1.0f, 0.0f, -1.0f,
+		1.0f, 0.0f, 1.0f,
 	};
 
 
 	static const GLfloat g_vertex_buffer_data_ObstacleTrou[] = {
-		2.0f, 2.0f, 1.0f,
-		4.0f, 2.0f, 1.0f,
-		2.0f, 2.0f, -1.0f,
-		4.0f, 2.0f, -1.0f,
-		2.0f, 2.0f, -1.0f,
-		4.0f, 2.0f, 1.0f,
+		2.0f, 0.0f, 1.0f,
+		4.0f, 0.0f, 1.0f,
+		2.0f, 0.0f, -1.0f,
+		4.0f, 0.0f, -1.0f,
+		2.0f, 0.0f, -1.0f,
+		4.0f, 0.0f, 1.0f,
 	};
 
 	// One color for each vertex. They were generated randomly.
@@ -287,9 +288,11 @@ int main(void)
 	float r_avant_arriere = 0.0f;
 	float r_roues_gd = 0.0f; //rotation roues gauche-droite
 	float r_voiture_gd = 0.0f; //rotation voiture gauche-droite
+	bool collision = false;
 
 	glm::mat4 myMatrix = Model;
 	glm::vec3 VectVitesse = glm::vec3(x, z, y);
+	glm::vec3 DernierVectVitesseNonNul = glm::vec3(x, z, y);
 
 	obs voiture = { voiture.rayon = 0.0f, voiture.centre = glm::vec4(0.0f) };
 	obs obs1 = {obs1.rayon = 0.0f, obs1.centre = glm::vec4(0.0f)};
@@ -453,9 +456,37 @@ int main(void)
 
 
 		// Set positions elements de la voiture (carosserie, roues...)
-		VectVitesse = glm::vec3(x, z, y);
-		myMatrix = glm::translate(myMatrix, VectVitesse);
-		myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
+		
+		if (collision2(voiture, myMatrix, obs1)){
+			if (collisionFine(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou) || collision){
+				myMatrix = glm::translate(myMatrix, -DernierVectVitesseNonNul);
+				collision = true;
+			}
+			else{
+				myMatrix = glm::translate(myMatrix, VectVitesse);
+				myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
+				VectVitesse = glm::vec3(x, z, y);
+				if (x != 0.0f || y != 0.0f || z != 0.0f){
+					DernierVectVitesseNonNul = glm::vec3(x, z, y);
+				}
+			}
+		}
+		else{
+			if (collision){
+				Sleep(500);
+				collision = false;
+				VectVitesse = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
+			else{
+				myMatrix = glm::translate(myMatrix, VectVitesse);
+				myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
+				VectVitesse = glm::vec3(x, z, y);
+				if (x != 0.0f || y != 0.0f || z != 0.0f){
+					DernierVectVitesseNonNul = glm::vec3(x, z, y);
+				}
+			}
+		}
+		
 		glm::mat4 scallingCube2 = glm::scale(Model, glm::vec3(0.2f, 0.2f, 0.2f));
 		glm::mat4 decaleRoueAvDroite = glm::translate(Model, glm::vec3(1.0f, -1.0f, 1.0f));
 		glm::mat4 decaleRoueAvGauche = glm::translate(Model, glm::vec3(1.0f, -1.0f, -1.0f));
