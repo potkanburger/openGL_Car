@@ -205,7 +205,6 @@ int main(void)
 		g_color_buffer_data_Cube1[3 * v + 0] = v / 36.0f;
 		g_color_buffer_data_Cube1[3 * v + 1] = 0.32f;
 		g_color_buffer_data_Cube1[3 * v + 2] = 0.55f;
-
 	}
 
 	static GLfloat g_color_buffer_data_Roue[12 * 3 * 3];
@@ -503,19 +502,37 @@ int main(void)
 			(void*)0            // array buffer offset
 			);
 		if (collision2(voiture, myMatrix, obs1)){
-			for (int v = 0; v<3 * 3; v++){
-				g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 2] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 3] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 4] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 5] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 6] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 7] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 8] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 9] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 10] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 11] = 0.1f;
+			if (collisionFine(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou)){
+				for (int v = 0; v<3 * 3; v++){
+					g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 2] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 3] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 4] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 5] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 6] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 7] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 8] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 9] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 10] = 0.1f;
+					g_color_buffer_data_Cube1[12 * v + 11] = 0.1f;
+				}
+			}
+			else{
+				for (int v = 0; v<3 * 3; v++){
+					g_color_buffer_data_Cube1[12 * v + 0] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 1] = 1.0f;
+					g_color_buffer_data_Cube1[12 * v + 2] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 3] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 4] = 1.0f;
+					g_color_buffer_data_Cube1[12 * v + 5] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 6] = x;
+					g_color_buffer_data_Cube1[12 * v + 7] = 0.f;
+					g_color_buffer_data_Cube1[12 * v + 8] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 9] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 10] = 0.0f;
+					g_color_buffer_data_Cube1[12 * v + 11] = 1 - x;
+				}
 			}
 		}
 		else{
