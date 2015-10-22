@@ -110,9 +110,7 @@ bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[
 		bound_obs_min_y = glm::min(bound_obs_min_y, obstacle[3 * i + 1]);
 		bound_obs_min_z = glm::min(bound_obs_min_z, obstacle[3 * i + 2]);
 
-		if (obstacle[3 * i + 0]>bound_obs_max_x){
-			bound_obs_max_x = obstacle[3 * i + 0];
-		}
+		bound_obs_max_x = glm::max(bound_obs_max_x, obstacle[3 * i + 0]);
 		bound_obs_max_y = glm::max(bound_obs_max_y, obstacle[3 * i + 1]);
 		bound_obs_max_z = glm::max(bound_obs_max_z, obstacle[3 * i + 2]);
 	}
@@ -136,4 +134,241 @@ bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[
 
 	return (inter[0] + inter[1] + inter[2]) == 3;
 
+}
+
+bool collision2(obs voiture, glm::mat4 MVP_obj, obs obstacle){// détection de collisions de sphères 
+	
+	glm::vec4 tmp;
+	tmp = MVP_obj*voiture.centre;
+	float distance = pow(tmp.x - obstacle.centre.x, 2) + pow(tmp.y - obstacle.centre.y, 2) + pow(tmp.z - obstacle.centre.z, 2);
+	return distance<=pow(voiture.rayon+obstacle.rayon, 2);
+}
+
+void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4 *centre){
+	float bound_obs_min_x = obstacle[0];
+	float bound_obs_min_y = obstacle[1];
+	float bound_obs_min_z = obstacle[2];
+
+	float bound_obs_max_x = obstacle[0];
+	float bound_obs_max_y = obstacle[1];
+	float bound_obs_max_z = obstacle[2];
+	float rayon_obstacle = 0.0f;
+
+	int inter[3] = { 0, 0, 0 };
+
+	for (int i = 1; i < 6; i++){
+		float tmp_x = obstacle[3 * i + 0];
+		float tmp_y = obstacle[3 * i + 1];
+		float tmp_z = obstacle[3 * i + 2];
+
+		bound_obs_min_x = std::min(bound_obs_min_x, tmp_x);
+		bound_obs_min_y = std::min(bound_obs_min_y, tmp_y);
+		bound_obs_min_z = std::min(bound_obs_min_z, tmp_z);
+
+		bound_obs_max_x = std::max(bound_obs_max_x, tmp_x);
+		bound_obs_max_y = std::max(bound_obs_max_y, tmp_y);
+		bound_obs_max_z = std::max(bound_obs_max_z, tmp_z);
+	}
+
+	rayon_obstacle = std::max(abs(bound_obs_max_x - bound_obs_min_x), abs(bound_obs_max_y - bound_obs_min_y));
+	*rayon = std::max(rayon_obstacle, abs(bound_obs_max_z - bound_obs_min_z));
+
+	*centre = glm::vec4(bound_obs_min_x + ((bound_obs_max_x - bound_obs_min_x) / 2), bound_obs_min_y + ((bound_obs_max_y - bound_obs_min_y) / 2), bound_obs_min_z + ((bound_obs_max_z - bound_obs_min_z) / 2), 1.0f);
+}
+
+
+void getTwoSidesOfRectangle(const GLfloat rectangle[], couplePoints* coupleLargeur, couplePoints* coupleLongueur){
+	glm::vec3 pt1 = glm::vec3(rectangle[0], rectangle[1], rectangle[2]);
+	glm::vec3 pt2 = glm::vec3(rectangle[3], rectangle[4], rectangle[5]);
+	glm::vec3 pt3 = glm::vec3(rectangle[6], rectangle[7], rectangle[8]);
+
+	couplePoints cp1 = { cp1.pointA = pt1, cp1.pointB = pt2};
+	couplePoints cp2 = { cp2.pointA = pt2, cp2.pointB = pt3 };
+	couplePoints cp3 = { cp3.pointA = pt1, cp3.pointB = pt3 };
+	couplePoints tabCouples[3] = { cp1, cp2, cp3 };
+
+	int largeur, nL, longueur;
+	float d_tmp;
+	float min = NULL;
+	float max = NULL;
+	for (int i = 0; i < 3; i++){
+		d_tmp = distanceCarree(tabCouples[i].pointA, tabCouples[i].pointB);
+		if (i==0){
+			max = d_tmp;
+			min = d_tmp;
+			largeur = i;
+			nL = i;
+		}
+		else{
+			if (d_tmp >= max){
+				max = d_tmp;
+				nL = i;
+			}
+			else if (d_tmp <= min){
+				min = d_tmp;
+				largeur = i;
+			}
+		}
+			
+	}
+
+	for (int i = 0; i < 3; i++){
+		if (largeur != i && nL != i){
+			longueur = i;
+		}
+	}
+
+	*coupleLargeur = tabCouples[largeur];
+	*coupleLongueur = tabCouples[longueur];
+}
+
+float distanceCarree(glm::vec3 ptA, glm::vec3 ptB){
+	return pow(ptA.x - ptB.x, 2) + pow(ptA.y - ptB.y, 2) + pow(ptA.z - ptB.z, 2);
+}
+
+bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, const GLfloat obstacle[]){
+	couplePoints largeurA, longueurA;
+	couplePoints largeurB, longueurB;
+	float pente,alpha_angle;
+	GLfloat voiture[6*3];
+	glm::vec4 tmp;
+	for (int i = 0; i < 6; i++){
+		tmp = MVP_obj*glm::vec4(voitureOriginale[3 * i + 0], voitureOriginale[3 * i + 1], voitureOriginale[3 * i + 2], 1.0f);
+		voiture[3 * i + 0] = tmp.x;
+		voiture[3 * i + 1] = tmp.y;
+		voiture[3 * i + 2] = tmp.z;
+	}
+	getTwoSidesOfRectangle(voiture, &largeurA, &longueurA);
+	getTwoSidesOfRectangle(obstacle, &largeurB, &longueurB);
+
+	couplePoints longueursTests[4] = { largeurA, longueurA, largeurB, longueurB };
+	float min_xLocalA, max_xLocalA;
+	float min_xLocalB, max_xLocalB;
+	float tmp_LocalA, tmp_LocalB;
+	const GLfloat *objA;
+	const GLfloat *objB;
+
+
+	for (int i = 0; i < 4; i++){
+		if ((longueursTests[i].pointB.x - longueursTests[i].pointA.x) == 0.0f){
+			if (i < 2){
+				objA = obstacle;
+				objB = voiture;
+			}
+			else{
+				objA = voiture;
+				objB = obstacle;
+			}
+
+			for (int j = 0; j < 6; j++){
+				tmp_LocalA = objA[3 * j + 2];
+				tmp_LocalB = objB[3 * j + 2];
+				if (j == 0){
+					max_xLocalA = tmp_LocalA;
+					min_xLocalA = tmp_LocalA;
+					max_xLocalB = tmp_LocalB;
+					min_xLocalB = tmp_LocalB;
+				}
+				else{
+					if (tmp_LocalA > max_xLocalA){
+						max_xLocalA = tmp_LocalA;
+					}
+					if (tmp_LocalA < min_xLocalA){
+						min_xLocalA = tmp_LocalA;
+					}
+
+					if (tmp_LocalB > max_xLocalB){
+						max_xLocalB = tmp_LocalB;
+					}
+					if (tmp_LocalB < min_xLocalB){
+						min_xLocalB = tmp_LocalB;
+					}
+				}
+			}
+
+
+		}
+		else{
+			pente = (longueursTests[i].pointB.z - longueursTests[i].pointA.z) / (longueursTests[i].pointB.x - longueursTests[i].pointA.x);
+			objA = obstacle;
+			objB = voiture;
+			if (pente == 0.0f){
+				for (int j = 0; j < 6; j++){
+					tmp_LocalA = objA[3 * j + 0];
+					tmp_LocalB = objB[3 * j + 0];
+
+					if (j == 0){
+						max_xLocalA = tmp_LocalA;
+						min_xLocalA = tmp_LocalA;
+						max_xLocalB = tmp_LocalB;
+						min_xLocalB = tmp_LocalB;
+					}
+					else{
+						if (tmp_LocalA > max_xLocalA){
+							max_xLocalA = tmp_LocalA;
+						}
+						if (tmp_LocalA < min_xLocalA){
+							min_xLocalA = tmp_LocalA;
+						}
+
+						if (tmp_LocalB > max_xLocalB){
+							max_xLocalB = tmp_LocalB;
+						}
+						if (tmp_LocalB < min_xLocalB){
+							min_xLocalB = tmp_LocalB;
+						}
+					}
+				}
+			}
+			else{
+				alpha_angle = atan(pente);
+				for (int j = 0; j < 6; j++){
+					float tmp_hypothenuseA = objA[3 * j + 2] - (pente*objA[3 * j + 0]);
+					float tmp_hypothenuseB = objB[3 * j + 2] - (pente*objB[3 * j + 0]);
+					tmp_LocalA = sin(alpha_angle)*tmp_hypothenuseA;
+					tmp_LocalB = sin(alpha_angle)*tmp_hypothenuseB;
+					if (j == 0){
+						max_xLocalA = tmp_LocalA;
+						min_xLocalA = tmp_LocalA;
+						max_xLocalB = tmp_LocalB;
+						min_xLocalB = tmp_LocalB;
+					}
+					else{
+						if (tmp_LocalA > max_xLocalA){
+							max_xLocalA = tmp_LocalA;
+						}
+						if (tmp_LocalA < min_xLocalA){
+							min_xLocalA = tmp_LocalA;
+						}
+
+						if (tmp_LocalB > max_xLocalB){
+							max_xLocalB = tmp_LocalB;
+						}
+						if (tmp_LocalB < min_xLocalB){
+							min_xLocalB = tmp_LocalB;
+						}
+					}
+				}
+			}
+		}
+
+		if (min_xLocalB <= max_xLocalA && min_xLocalB >= min_xLocalA){
+
+		}
+		else if (max_xLocalB <= max_xLocalA && max_xLocalB >= min_xLocalA){
+
+		}
+		else if (min_xLocalA <= max_xLocalB && min_xLocalA >= min_xLocalB){
+
+		}
+		else if (max_xLocalA <= max_xLocalB && max_xLocalA >= min_xLocalB){
+
+		}
+		else{
+			return false;
+		}
+
+	}
+	
+	return true;
 }
