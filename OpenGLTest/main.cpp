@@ -24,11 +24,10 @@ GLFWwindow* window;
 #include <glm/gtx/rotate_vector.hpp>
 using namespace glm;
 
+#include <common/objloader.hpp>
+#include <car_functions.h>
 
-#define PI 3.14159265F
 
-bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]);
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path);
 
 int main(void)
 {
@@ -45,7 +44,7 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow(1024, 768, "Tutorial 04 - Colored Cube", NULL, NULL);
+	window = glfwCreateWindow(1920, 1080, "Car Jacquet", NULL, NULL);
 	if (window == NULL){
 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		glfwTerminate();
@@ -81,8 +80,16 @@ int main(void)
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
+	// chargement des .OBJ
+	std::vector<glm::vec3> vertices_car;
+	std::vector<glm::vec2> uvs_car;
+	std::vector<glm::vec3> normals; // Won't be used at the moment.
+	bool res = loadOBJ("Blender/test.obj", vertices_car, uvs_car, normals);
+	//bool res = loadOBJ("Blender/cube.obj", vertices_car, uvs_car, normals);
+
+
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 300.0f);
 	// Camera matrix
 	glm::mat4 View = glm::lookAt(
 		glm::vec3(8, 6, -6), // Camera is at (4,3,-3), in World Space
@@ -97,6 +104,8 @@ int main(void)
 	glm::mat4 MVP_RoueAvDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArGauche = Projection * View * Model;
+
+	vector<obs> obstacles;
 
 	// Our vertices. Tree consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
 	// A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
@@ -275,10 +284,25 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, colorbufferObstacleTrou);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_ObstacleTrou), g_color_buffer_data_ObstacleTrou, GL_STATIC_DRAW);
 
+	GLuint vertexbuffer_car_obj;
+	glGenBuffers(1, &vertexbuffer_car_obj);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_car_obj);
+	glBufferData(GL_ARRAY_BUFFER, vertices_car.size() * sizeof(glm::vec3), &vertices_car[0], GL_STATIC_DRAW);
+
+	GLuint uvbuffer_car_obj;
+	glGenBuffers(1, &uvbuffer_car_obj);
+	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_car_obj);
+	glBufferData(GL_ARRAY_BUFFER, uvs_car.size() * sizeof(glm::vec2), &uvs_car[0], GL_STATIC_DRAW);
+
 
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
+	float jump_power = 0.0f;
+	float jump_fall = 0.0f;
+	float sol = 0.0f;
+	float NOS = 100.0f;
+	float wait_NOS = 0.0f;
 
 	float pas = 0.1f;
 	float pas_init = 0.1f;
@@ -290,6 +314,12 @@ int main(void)
 
 	glm::mat4 myMatrix = Model;
 	glm::vec3 VectVitesse = glm::vec3(x, z, y);
+
+	obs voiture = { voiture.rayon = 0.0f, voiture.centre = glm::vec4(0.0f) };
+	obs obs1 = {obs1.rayon = 0.0f, obs1.centre = glm::vec4(0.0f)};
+	get_centre_rayon(g_vertex_buffer_data_ObstacleTrou, &obs1.rayon, &obs1.centre);
+	get_centre_rayon(g_vertex_buffer_data_HitboxVoiture, &voiture.rayon, &voiture.centre);
+	obstacles.push_back(obs1);
 
 	do{
 
@@ -435,15 +465,41 @@ int main(void)
 			r_voiture_gd = 0.0f;
 		}
 
-		// Strafe UP
-		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
-			z += 0.1f;
+		// JUMP 
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+			jump_power += 0.1f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
+			if (jump_power > 0){
+				jump_power -= 0.1f;
+				z += 0.1f;
+				jump_fall += 0.1f;
+			}
+			else if (jump_fall > sol){
+				jump_fall -= 0.1f;
+				z -= 0.1f;
+			}
 		}
 		// Strafe DOWN
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
 			z = -0.1f;
 		}
 
+		//BOOST
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+			if (NOS >= 0){
+				x = pas_max*2.5f;
+				NOS -= 1;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){
+			if (NOS >= 100){
+				NOS = 100;
+			}
+			else { NOS += 1; }
+		}
 
 
 		// Set positions elements de la voiture (carosserie, roues...)
@@ -495,7 +551,7 @@ int main(void)
 			0,                  // stride
 			(void*)0            // array buffer offset
 			);
-		if (collision(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou)){
+		if (collision2(voiture, myMatrix, obs1)){
 			for (int v = 0; v<3 * 3; v++){
 				g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
 				g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;
@@ -772,6 +828,39 @@ int main(void)
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
+		//-----------------------------------------------------------------------Voiture OBJ importé-----------------------------------------------------------------------------
+	
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_car_obj);
+		glVertexAttribPointer(
+			0,                  // attribute
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+			);
+
+		// 2nd attribute buffer : UVs
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_car_obj);
+		glVertexAttribPointer(
+			1,                                // attribute
+			2,                                // size
+			GL_FLOAT,                         // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
+
+		// Draw the triangle !
+		glDrawArrays(GL_TRIANGLES, 0, vertices_car.size());
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		
+		
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -793,143 +882,4 @@ int main(void)
 	glfwTerminate();
 
 	return 0;
-}
-
-bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]){
-	float bound_obs_min_x = obstacle[0];
-	float bound_obs_min_y = obstacle[1];
-	float bound_obs_min_z = obstacle[2];
-
-	float bound_obs_max_x = obstacle[0];
-	float bound_obs_max_y = obstacle[1];
-	float bound_obs_max_z = obstacle[2];
-
-	int inter[3] = { 0, 0, 0 };
-
-	for (int i = 1; i < 6; i++){
-		bound_obs_min_x = glm::min(bound_obs_min_x, obstacle[3 * i + 0]);
-		bound_obs_min_y = glm::min(bound_obs_min_y, obstacle[3 * i + 1]);
-		bound_obs_min_z = glm::min(bound_obs_min_z, obstacle[3 * i + 2]);
-
-		if (obstacle[3 * i + 0]>bound_obs_max_x){
-			bound_obs_max_x = obstacle[3 * i + 0];
-		}
-		bound_obs_max_y = glm::max(bound_obs_max_y, obstacle[3 * i + 1]);
-		bound_obs_max_z = glm::max(bound_obs_max_z, obstacle[3 * i + 2]);
-	}
-
-	glm::vec4 tmp;
-
-	for (int i = 0; i < 6; i++){
-		tmp = MVP_obj*glm::vec4(objet[3 * i + 0], objet[3 * i + 1], objet[3 * i + 2], 1.0f);
-
-		if (tmp.x >= bound_obs_min_x && tmp.x <= bound_obs_max_x){
-			inter[0] = 1;
-		}
-		if (tmp.y >= bound_obs_min_y && tmp.y <= bound_obs_max_y){
-			inter[1] = 1;
-		}
-		if (tmp.z >= bound_obs_min_z && tmp.z <= bound_obs_max_z){
-			inter[2] = 1;
-		}
-
-	}
-
-	return (inter[0] + inter[1] + inter[2]) == 3;
-
-}
-
-
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path){
-
-	// Create the shaders
-	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the Vertex Shader code from the file
-	std::string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if (VertexShaderStream.is_open()){
-		std::string Line = "";
-		while (getline(VertexShaderStream, Line))
-			VertexShaderCode += "\n" + Line;
-		VertexShaderStream.close();
-	}
-	else{
-		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
-		getchar();
-		return 0;
-	}
-
-	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if (FragmentShaderStream.is_open()){
-		std::string Line = "";
-		while (getline(FragmentShaderStream, Line))
-			FragmentShaderCode += "\n" + Line;
-		FragmentShaderStream.close();
-	}
-
-
-
-	GLint Result = GL_FALSE;
-	int InfoLogLength;
-
-
-
-	// Compile Vertex Shader
-	printf("Compiling shader : %s\n", vertex_file_path);
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-	glCompileShader(VertexShaderID);
-
-	// Check Vertex Shader
-	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0){
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		printf("%s\n", &VertexShaderErrorMessage[0]);
-	}
-
-
-
-	// Compile Fragment Shader
-	printf("Compiling shader : %s\n", fragment_file_path);
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-	glCompileShader(FragmentShaderID);
-
-	// Check Fragment Shader
-	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0){
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		printf("%s\n", &FragmentShaderErrorMessage[0]);
-	}
-
-
-
-	// Link the program
-	printf("Linking program\n");
-	GLuint ProgramID = glCreateProgram();
-	glAttachShader(ProgramID, VertexShaderID);
-	glAttachShader(ProgramID, FragmentShaderID);
-	glLinkProgram(ProgramID);
-
-	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0){
-		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		printf("%s\n", &ProgramErrorMessage[0]);
-	}
-
-	glDeleteShader(VertexShaderID);
-	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
 }
