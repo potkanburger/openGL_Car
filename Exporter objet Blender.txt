@@ -1,0 +1,9 @@
+Pour exporter un objet Blender compatible avec le Loader:
+	-X forward
+	Y up
+	Apply modifiers
+	Include Edges
+	write materials
+	Triangulate Faces
+	Objects as OBJ Objects
+	Keep Vertex Order

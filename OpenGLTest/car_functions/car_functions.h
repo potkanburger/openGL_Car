@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cstring>
+#include <sstream>
 using namespace std;
 
 #include <stdlib.h>
@@ -33,8 +35,15 @@ struct couplePoints{
 	glm::vec3 pointB;
 };
 
+struct triangle{
+	int pt1;
+	int pt2;
+	int pt3;
+};
+
 
 #define PI 3.14159265F;
+
 
 bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]);
 bool collision2(obs voiture, glm::mat4 MVP_obj, obs obstacle);
@@ -43,3 +52,5 @@ void getTwoSidesOfRectangle(const GLfloat rectangle[], couplePoints* coupleLarge
 float distanceCarree(glm::vec3 ptA, glm::vec3 ptB);
 void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4* centre);
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path);
+
+std::vector<glm::vec3> objLoader(string fichier);

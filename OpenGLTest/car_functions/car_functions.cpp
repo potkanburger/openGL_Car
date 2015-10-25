@@ -372,3 +372,59 @@ bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, const GL
 	
 	return true;
 }
+
+
+std::vector<glm::vec3> objLoader(string fichier){
+	ifstream file(fichier.c_str(), ios::in);
+	string c =  "v ";
+	string face = "f ";
+	std::vector<glm::vec3> tmp;
+	std::vector<glm::vec3> vertices;
+	std::vector<triangle> faces;
+	if (!file){
+		return tmp;
+	}
+	std::string line;
+	float tx, ty, tz;
+	while (std::getline(file, line))
+	{
+		string t = line.substr(0, 2);
+		if (t == c){
+			string tmpl = line.substr(2);
+			int tmp_pos = tmpl.find_first_of(" ");
+			string tmpl1 = tmpl.substr(tmp_pos+1);
+			int tmp_pos2 = tmpl1.find_first_of(" ");
+			string tmp_x = tmpl.substr(0, tmp_pos);
+			string tmp_y = tmpl.substr(tmp_pos + 1, tmp_pos2);
+			string tmp_z = tmpl1.substr(tmp_pos2+1);
+			
+			tx = (GLfloat) stof(tmp_x);
+			ty = (GLfloat) stof(tmp_y);
+			tz = (GLfloat) stof(tmp_z);
+
+			tmp.push_back(glm::vec3(tx, ty, tz));
+		}
+		else if (t == face){
+			string tmp = line.substr(2);
+			int tmp_pos = tmp.find_first_of(" ");
+			string tmpl1 = tmp.substr(tmp_pos + 1);
+			int tmp_pos2 = tmpl1.find_first_of(" ");
+			string a = tmp.substr(0, tmp_pos);
+			string b = tmp.substr(tmp_pos + 1, tmp_pos2);
+			string c = tmpl1.substr(tmp_pos2 + 1);
+			triangle t = { t.pt1 = stoi(a)-1, t.pt2 = stoi(b)-1, t.pt3 = stoi(c)-1 };
+			faces.push_back(t);
+		}
+			
+		
+	}
+
+	file.close();
+	for (triangle i : faces){
+		vertices.push_back(tmp.at(i.pt1));
+		vertices.push_back(tmp.at(i.pt2));
+		vertices.push_back(tmp.at(i.pt3));
+	}
+	return vertices;
+}
+
