@@ -53,7 +53,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\horleas_branch;C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\openGL_Car\branches\horleas_branch\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\openGL_Car\trunk\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -71,7 +71,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\horleas_branch;C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\openGL_Car\branches\horleas_branch\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Horleas\ESIEE\Esiee\E4\Informatique\openGL_Car\trunk\OpenGLTest\car_functions;C:\openGLwrappers\glm;C:\openGLwrappers\dependencies;C:\openGLwrappers\glfw\include;C:\openGLwrappers\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -83,17 +83,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\..\..\openGLwrappers\dependencies\common\objloader.cpp" />
     <ClCompile Include="car_functions\car_functions.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\..\..\openGLwrappers\dependencies\common\objloader.hpp" />
     <ClInclude Include="car_functions\car_functions.h" />
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="OPENGL_Car.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

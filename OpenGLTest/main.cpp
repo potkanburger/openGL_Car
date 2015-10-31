@@ -9,6 +9,7 @@ using namespace std;
 
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 
 // Include GLEW
@@ -24,7 +25,7 @@ GLFWwindow* window;
 #include <glm/gtx/rotate_vector.hpp>
 using namespace glm;
 
-#include <common/objloader.hpp>
+
 #include <car_functions.h>
 
 
@@ -80,16 +81,8 @@ int main(void)
 	// Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
-	// chargement des .OBJ
-	std::vector<glm::vec3> vertices_car;
-	std::vector<glm::vec2> uvs_car;
-	std::vector<glm::vec3> normals; // Won't be used at the moment.
-	bool res = loadOBJ("Blender/test.obj", vertices_car, uvs_car, normals);
-	//bool res = loadOBJ("Blender/cube.obj", vertices_car, uvs_car, normals);
-
-
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 300.0f);
+	glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 	// Camera matrix
 	glm::mat4 View = glm::lookAt(
 		glm::vec3(8, 6, -6), // Camera is at (4,3,-3), in World Space
@@ -104,125 +97,11 @@ int main(void)
 	glm::mat4 MVP_RoueAvDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArDroite = Projection * View * Model;
 	glm::mat4 MVP_RoueArGauche = Projection * View * Model;
+	glm::mat4 MVP_Voiture = Projection * View * Model;
+	glm::mat4 MVP_Floor = Projection * View * Model;
 
 	vector<obs> obstacles;
-
-	// Our vertices. Tree consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-	// A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
-	static const GLfloat g_vertex_buffer_data_Cube1[] = {
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, -1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f
-	};
-
-
-	static const GLfloat g_vertex_buffer_data_Roue[] = {
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, -1.0f,
-		-1.0f, 1.0f, -1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, -1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		1.0f, -1.0f, 1.0f
-	};
-
-	static const GLfloat g_vertex_buffer_data_HitboxVoiture[] = {
-		-1.0f, 2.0f, 1.0f,
-		1.0f, 2.0f, 1.0f,
-		-1.0f, 2.0f, -1.0f,
-		1.0f, 2.0f, -1.0f,
-		-1.0f, 2.0f, -1.0f,
-		1.0f, 2.0f, 1.0f,
-	};
-
-
-	static const GLfloat g_vertex_buffer_data_ObstacleTrou[] = {
-		2.0f, 2.0f, 1.0f,
-		4.0f, 2.0f, 1.0f,
-		2.0f, 2.0f, -1.0f,
-		4.0f, 2.0f, -1.0f,
-		2.0f, 2.0f, -1.0f,
-		4.0f, 2.0f, 1.0f,
-	};
-
-	// One color for each vertex. They were generated randomly.
-	static GLfloat g_color_buffer_data_Cube1[12 * 3 * 3];
-	for (int v = 0; v<12 * 3; v++){
-		g_color_buffer_data_Cube1[3 * v + 0] = v / 36.0f;
-		g_color_buffer_data_Cube1[3 * v + 1] = 0.32f;
-		g_color_buffer_data_Cube1[3 * v + 2] = 0.55f;
-
-	}
-
-	static GLfloat g_color_buffer_data_Roue[12 * 3 * 3];
-	for (int v = 0; v<12 * 3; v++){
-		g_color_buffer_data_Roue[3 * v + 0] = 0.80f;
-		g_color_buffer_data_Roue[3 * v + 1] = v / 72.0f + 0.10f;
-		g_color_buffer_data_Roue[3 * v + 2] = 0.05f;
-
-	}
+	
 
 	static GLfloat g_color_buffer_data_HitboxVoiture[6 * 3];
 	for (int v = 0; v< 6; v++){
@@ -238,29 +117,183 @@ int main(void)
 		g_color_buffer_data_HitboxVoiture[3 * v + 2] = 0.85f;
 	}
 
+	// --------------------------------------------LE SOL -------------------------------------------------------------
 
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_Cube1), g_vertex_buffer_data_Cube1, GL_STATIC_DRAW);
+	static const GLfloat g_vertex_buffer_data_floor[] = {
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+		1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, -1.0f,
+		1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f
+	};
 
 
-	GLuint colorbuffer;
-	glGenBuffers(1, &colorbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Cube1), g_color_buffer_data_Cube1, GL_STATIC_DRAW);
+	static const GLfloat g_color_buffer_data_floor[] = {
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+		0.676f, 0.977f, 0.133f,
+	};
 
-	GLuint vertexbufferRoue;
-	glGenBuffers(1, &vertexbufferRoue);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbufferRoue);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_Roue), g_vertex_buffer_data_Roue, GL_STATIC_DRAW);
 
 
-	GLuint colorbufferRoue;
-	glGenBuffers(1, &colorbufferRoue);
-	glBindBuffer(GL_ARRAY_BUFFER, colorbufferRoue);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
+	std::vector< glm::vec3 > verticesVoiture;
+	verticesVoiture = objLoader("help2.obj");
+	int sizeVoiture = verticesVoiture.size();
+	static GLfloat g_voiture_data[10000];
+	static GLfloat g_voiture_color[10000];
+	float max_x = 0.0f;
+	float max_z = 0.0f;
 
+	for (int v = 0; v < sizeVoiture; v++){
+
+		if (abs(verticesVoiture.at(v).x)>max_x)max_x = abs(verticesVoiture.at(v).x);
+		if (abs(verticesVoiture.at(v).z)>max_z)max_z = abs(verticesVoiture.at(v).z);
+		g_voiture_data[3 * v + 0] = verticesVoiture.at(v).x;
+		g_voiture_data[3 * v + 1] = verticesVoiture.at(v).y;
+		g_voiture_data[3 * v + 2] = verticesVoiture.at(v).z;
+
+		g_voiture_color[3 * v + 0] = 0.90f;
+		g_voiture_color[3 * v + 1] = 0.00f;
+		g_voiture_color[3 * v + 2] = 0.00f;
+
+	}
+	max_x /= 4; // On rescale la voiture, il faut rescale la hitbox aussi.
+	max_z /= 4;
+
+
+
+	std::vector< glm::vec3 > verticesRoue;
+	verticesRoue = objLoader("roue.obj");
+	int sizeRoue = verticesRoue.size();
+	static GLfloat g_roue_data[10000];
+	static GLfloat g_roue_color[10000];
+	float tmp_c = 0.0f;
+	float tmp_d = 0.50f;
+
+	for (int v = 0; v < sizeRoue; v++){
+		g_roue_data[3 * v + 0] = verticesRoue.at(v).x;
+		g_roue_data[3 * v + 1] = verticesRoue.at(v).y;
+		g_roue_data[3 * v + 2] = verticesRoue.at(v).z;
+		if (v%3!=0){
+			tmp_c = 1.0f;
+			tmp_d = 0.0f;
+		}
+		else{
+			tmp_c = 0.0f;
+			tmp_d = 0.50f;
+		}
+		g_roue_color[3 * v + 0] = tmp_d;
+		g_roue_color[3 * v + 1] = 0.0f;
+		g_roue_color[3 * v + 2] = tmp_c;
+
+	}
+
+	static const GLfloat g_vertex_buffer_data_HitboxVoiture[] = {
+		-max_x, 0.0f, max_z,
+		max_x, 0.0f, max_z,
+		-max_x, 0.0f, -max_z,
+		max_x, 0.0f, -max_z,
+		-max_x, 0.0f, -max_z,
+		max_x, 0.0f, max_z
+	};
+
+
+	static const GLfloat g_vertex_buffer_data_ObstacleTrou[] = {
+		2.0f, 0.0f, 1.0f,
+		4.0f, 0.0f, 1.0f,
+		2.0f, 0.0f, -1.0f,
+		4.0f, 0.0f, -1.0f,
+		2.0f, 0.0f, -1.0f,
+		4.0f, 0.0f, 1.0f
+	};
+
+
+	GLuint blender;
+	glGenBuffers(1, &blender);
+	glBindBuffer(GL_ARRAY_BUFFER, blender);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_voiture_data), g_voiture_data, GL_STATIC_DRAW);
+
+	GLuint colorblender;
+	glGenBuffers(1, &colorblender);
+	glBindBuffer(GL_ARRAY_BUFFER, colorblender);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_voiture_color), g_voiture_color, GL_STATIC_DRAW);
+
+
+	GLuint roueBlender;
+	glGenBuffers(1, &roueBlender);
+	glBindBuffer(GL_ARRAY_BUFFER, roueBlender);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_data), g_roue_data, GL_STATIC_DRAW);
+
+	GLuint colorRoueBlender;
+	glGenBuffers(1, &colorRoueBlender);
+	glBindBuffer(GL_ARRAY_BUFFER, colorRoueBlender);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_color), g_roue_color, GL_STATIC_DRAW);
+
+	
 
 	GLuint vertexbufferHitboxVoiture;
 	glGenBuffers(1, &vertexbufferHitboxVoiture);
@@ -284,20 +317,23 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, colorbufferObstacleTrou);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_ObstacleTrou), g_color_buffer_data_ObstacleTrou, GL_STATIC_DRAW);
 
-	GLuint vertexbuffer_car_obj;
-	glGenBuffers(1, &vertexbuffer_car_obj);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_car_obj);
-	glBufferData(GL_ARRAY_BUFFER, vertices_car.size() * sizeof(glm::vec3), &vertices_car[0], GL_STATIC_DRAW);
 
-	GLuint uvbuffer_car_obj;
-	glGenBuffers(1, &uvbuffer_car_obj);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_car_obj);
-	glBufferData(GL_ARRAY_BUFFER, uvs_car.size() * sizeof(glm::vec2), &uvs_car[0], GL_STATIC_DRAW);
+	GLuint vertexbufferfloor;
+	glGenBuffers(1, &vertexbufferfloor);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbufferfloor);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data_floor), g_vertex_buffer_data_floor, GL_STATIC_DRAW);
+
+
+	GLuint colorbufferfloor;
+	glGenBuffers(1, &colorbufferfloor);
+	glBindBuffer(GL_ARRAY_BUFFER, colorbufferfloor);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_floor), g_color_buffer_data_floor, GL_STATIC_DRAW);
 
 
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
+
 	float jump_power = 0.0f;
 	float jump_fall = 0.0f;
 	float sol = 0.0f;
@@ -311,9 +347,11 @@ int main(void)
 	float r_avant_arriere = 0.0f;
 	float r_roues_gd = 0.0f; //rotation roues gauche-droite
 	float r_voiture_gd = 0.0f; //rotation voiture gauche-droite
+	bool collision = false;
 
 	glm::mat4 myMatrix = Model;
 	glm::vec3 VectVitesse = glm::vec3(x, z, y);
+	glm::vec3 DernierVectVitesseNonNul = glm::vec3(x, z, y);
 
 	obs voiture = { voiture.rayon = 0.0f, voiture.centre = glm::vec4(0.0f) };
 	obs obs1 = {obs1.rayon = 0.0f, obs1.centre = glm::vec4(0.0f)};
@@ -471,7 +509,7 @@ int main(void)
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
-			if (jump_power > 0){
+			if (jump_power > 0.0f){
 				jump_power -= 0.1f;
 				z += 0.1f;
 				jump_fall += 0.1f;
@@ -488,29 +526,64 @@ int main(void)
 
 		//BOOST
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
-			if (NOS >= 0){
+			if (NOS >= 0.0f){
 				x = pas_max*2.5f;
 				NOS -= 1;
 			}
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){
-			if (NOS >= 100){
+			if (NOS >= 100.0f){
 				NOS = 100;
 			}
 			else { NOS += 1; }
 		}
 
+		
+		if (collision2(voiture, myMatrix, obs1)){
+			if (collisionFine(g_vertex_buffer_data_HitboxVoiture, myMatrix, g_vertex_buffer_data_ObstacleTrou) || collision){
+				myMatrix = glm::translate(myMatrix, -DernierVectVitesseNonNul);
+				collision = true;
+			}
+			else{
+				myMatrix = glm::translate(myMatrix, VectVitesse);
+				myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
+				VectVitesse = glm::vec3(x, z, y);
+				if (x != 0.0f || y != 0.0f || z != 0.0f){
+					DernierVectVitesseNonNul = glm::vec3(x, z, y);
+				}
+			}
+		}
+		else{
+			if (collision){
+				Sleep(500);
+				collision = false;
+				VectVitesse = glm::vec3(0.0f, 0.0f, 0.0f);
+				r_voiture_gd = 0.0f;
+			}
+			else{
+				myMatrix = glm::translate(myMatrix, VectVitesse);
+				myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
+				VectVitesse = glm::vec3(x, z, y);
+				if (x != 0.0f || y != 0.0f || z != 0.0f){
+					DernierVectVitesseNonNul = glm::vec3(x, z, y);
+				}
+			}
+		}
+		
+		// SOL
+
+		glm::mat4 FloorScalingMatrix = glm::scale(10000.0f, 0.05f, 10000.0f);
+		glm::mat4 FloorTranslationMatrix = glm::translate(0.0f, -1.0f, 0.0f);
 
 		// Set positions elements de la voiture (carosserie, roues...)
-		VectVitesse = glm::vec3(x, z, y);
-		myMatrix = glm::translate(myMatrix, VectVitesse);
-		myMatrix = glm::rotate(myMatrix, r_voiture_gd*pas / pas_max, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 scallingCube2 = glm::scale(Model, glm::vec3(0.2f, 0.2f, 0.2f));
-		glm::mat4 decaleRoueAvDroite = glm::translate(Model, glm::vec3(1.0f, -1.0f, 1.0f));
-		glm::mat4 decaleRoueAvGauche = glm::translate(Model, glm::vec3(1.0f, -1.0f, -1.0f));
-		glm::mat4 decaleRoueArDroite = glm::translate(Model, glm::vec3(-1.0f, -1.0f, 1.0f));
-		glm::mat4 decaleRoueArGauche = glm::translate(Model, glm::vec3(-1.0f, -1.0f, -1.0f));
+		glm::mat4 scallingCube2 = glm::scale(Model, glm::vec3(0.2f, 0.2f, 0.33f));
+		glm::mat4 scallingVoiture = glm::scale(Model, glm::vec3(0.25f, 0.25f, 0.25f));
+		glm::mat4 translateVoiture = glm::translate(Model, glm::vec3(0.0f, -0.9f, 0.0f));
+		glm::mat4 decaleRoueAvDroite = glm::translate(Model, glm::vec3(1.35f, 0.0f, 0.6f));
+		glm::mat4 decaleRoueAvGauche = glm::translate(Model, glm::vec3(1.35f, 0.0f, -0.6f));
+		glm::mat4 decaleRoueArDroite = glm::translate(Model, glm::vec3(-1.3f, 0.0f, 0.6f));
+		glm::mat4 decaleRoueArGauche = glm::translate(Model, glm::vec3(-1.3f, 0.0f, -0.6f));
 		glm::vec3 myRotationAxis(0.0f, 0.0f, 5.0f);
 		glm::mat4 myRotation = glm::rotate(Model, r_avant_arriere, myRotationAxis);
 
@@ -521,10 +594,12 @@ int main(void)
 
 		//Matrices MVP
 		MVP = Projection * View * myMatrix;
+		MVP_Voiture = MVP * translateVoiture * scallingVoiture;
 		MVP_RoueAvDroite = MVP*decaleRoueAvDroite*rotationLRAV*myRotation*scallingCube2;
 		MVP_RoueAvGauche = MVP*decaleRoueAvGauche*rotationLRAV*myRotation*scallingCube2;
 		MVP_RoueArGauche = MVP*decaleRoueArGauche*myRotation*scallingCube2;
 		MVP_RoueArDroite = MVP*decaleRoueArDroite*myRotation*scallingCube2;
+		MVP_Floor = Projection*View*Model*FloorTranslationMatrix*FloorScalingMatrix;
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -533,16 +608,16 @@ int main(void)
 		glUseProgram(programID);
 
 
-		//-----------------------------------------------------------------------CUBE_1---------------------------------------------------------------------------------------
+		//-----------------------------------------------------------------------VOITURE---------------------------------------------------------------------------------------
 
-
+	
 		// Send our transformation to the currently bound shader, 
 		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_Voiture[0][0]);
 
-		// 1rst attribute buffer : vertices
+		// 2nd attribute buffer ROUE_AV_DROIT
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, blender);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -551,43 +626,11 @@ int main(void)
 			0,                  // stride
 			(void*)0            // array buffer offset
 			);
-		if (collision2(voiture, myMatrix, obs1)){
-			for (int v = 0; v<3 * 3; v++){
-				g_color_buffer_data_Cube1[12 * v + 0] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 1] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 2] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 3] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 4] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 5] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 6] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 7] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 8] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 9] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 10] = 0.1f;
-				g_color_buffer_data_Cube1[12 * v + 11] = 0.1f;
-			}
-		}
-		else{
-			for (int v = 0; v<3 * 3; v++){
-				g_color_buffer_data_Cube1[12 * v + 0] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 1] = 1.0f;
-				g_color_buffer_data_Cube1[12 * v + 2] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 3] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 4] = 1.0f;
-				g_color_buffer_data_Cube1[12 * v + 5] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 6] = x;
-				g_color_buffer_data_Cube1[12 * v + 7] = 0.f;
-				g_color_buffer_data_Cube1[12 * v + 8] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 9] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 10] = 0.0f;
-				g_color_buffer_data_Cube1[12 * v + 11] = 1 - x;
-			}
-		}
-		// 2nd attribute buffer : colors
+
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Cube1), g_color_buffer_data_Cube1, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, colorblender);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_voiture_color), g_voiture_color, GL_STATIC_DRAW);
 		glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			3,                                // size
@@ -598,7 +641,7 @@ int main(void)
 			);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+		glDrawArrays(GL_TRIANGLES, 0, sizeVoiture); 
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -606,12 +649,11 @@ int main(void)
 
 		//-----------------------------------------------------------------------ROUE_AV_DROIT---------------------------------------------------------------------------------------
 
-
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_RoueAvDroite[0][0]);
 
 		// 2nd attribute buffer ROUE_AV_DROIT
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferRoue);
+		glBindBuffer(GL_ARRAY_BUFFER, roueBlender);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -623,8 +665,8 @@ int main(void)
 
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbufferRoue);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, colorRoueBlender);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_color),g_roue_color, GL_STATIC_DRAW);
 		glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			3,                                // size
@@ -635,20 +677,20 @@ int main(void)
 			);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+		glDrawArrays(GL_TRIANGLES, 0, sizeRoue); 
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
 
-		//-----------------------------------------------------------------------CUBE_ROUE_AV_GAUCHE---------------------------------------------------------------------------------------
+		//-----------------------------------------------------------------------ROUE_AV_GAUCHE---------------------------------------------------------------------------------------
 
 
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_RoueAvGauche[0][0]);
 
 		// 2nd attribute buffer CUBE2
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferRoue);
+		glBindBuffer(GL_ARRAY_BUFFER, roueBlender);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -660,8 +702,8 @@ int main(void)
 
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbufferRoue);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, colorRoueBlender);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_color), g_roue_color, GL_STATIC_DRAW);
 		glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			3,                                // size
@@ -672,20 +714,20 @@ int main(void)
 			);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+		glDrawArrays(GL_TRIANGLES, 0, sizeRoue); 
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
 
-		//-----------------------------------------------------------------------CUBE_ROUE_AR_GAUCHE---------------------------------------------------------------------------------------
+		//-----------------------------------------------------------------------ROUE_AR_GAUCHE---------------------------------------------------------------------------------------
 
 
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_RoueArGauche[0][0]);
 
 		// 2nd attribute buffer ARGAUCHE
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferRoue);
+		glBindBuffer(GL_ARRAY_BUFFER, roueBlender);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -697,8 +739,8 @@ int main(void)
 
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbufferRoue);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, colorRoueBlender);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_color), g_roue_color, GL_STATIC_DRAW);
 		glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			3,                                // size
@@ -709,19 +751,19 @@ int main(void)
 			);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+		glDrawArrays(GL_TRIANGLES, 0, sizeRoue); 
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
-		//-----------------------------------------------------------------------CUBE_ROUE_AR_DROITE---------------------------------------------------------------------------------------
+		//-----------------------------------------------------------------------ROUE_AR_DROITE---------------------------------------------------------------------------------------
 
 
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_RoueArDroite[0][0]);
 
 		// 2nd attribute buffer ARGAUCHE
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferRoue);
+		glBindBuffer(GL_ARRAY_BUFFER, roueBlender);
 		glVertexAttribPointer(
 			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -733,8 +775,8 @@ int main(void)
 
 
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbufferRoue);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_Roue), g_color_buffer_data_Roue, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, colorRoueBlender);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_roue_color), g_roue_color, GL_STATIC_DRAW);
 		glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			3,                                // size
@@ -745,50 +787,10 @@ int main(void)
 			);
 
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+		glDrawArrays(GL_TRIANGLES, 0, sizeRoue); // 12*3 indices starting at 0 -> 12 triangles
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
-
-
-		//-----------------------------------------------------------------------HITBOX---------------------------------------------------------------------------------------
-
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferHitboxVoiture);
-		glVertexAttribPointer(
-			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-			3,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
-			);
-
-
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, colorbufferHitboxVoiture);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data_HitboxVoiture), g_color_buffer_data_HitboxVoiture, GL_STATIC_DRAW);
-		glVertexAttribPointer(
-			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-			3,                                // size
-			GL_FLOAT,                         // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-			);
-
-		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 2 * 3); // 2*3 indices starting at 0 -> 2 triangles
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-
 
 		//-----------------------------------------------------------------------OBSCTACLE (TROU)-----------------------------------------------------------------------------
 
@@ -828,52 +830,54 @@ int main(void)
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
-		//-----------------------------------------------------------------------Voiture OBJ importé-----------------------------------------------------------------------------
-	
-		// 1rst attribute buffer : vertices
+		//-----------------------------------------------------------------------Le Sol -------------------------------------------------------------------------------
+		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP_Floor[0][0]);
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_car_obj);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbufferfloor);
 		glVertexAttribPointer(
-			0,                  // attribute
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
 			0,                  // stride
 			(void*)0            // array buffer offset
 			);
-
-		// 2nd attribute buffer : UVs
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_car_obj);
+		glBindBuffer(GL_ARRAY_BUFFER, colorbufferfloor);
 		glVertexAttribPointer(
-			1,                                // attribute
-			2,                                // size
+			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+			3,                                // size
 			GL_FLOAT,                         // type
 			GL_FALSE,                         // normalized?
 			0,                                // stride
 			(void*)0                          // array buffer offset
 			);
 
-		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, vertices_car.size());
+		glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
-		
-		
+
+
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		
+
+		
 
 	} // Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 	glfwWindowShouldClose(window) == 0);
 
 	// Cleanup VBO and shader
-	glDeleteBuffers(1, &vertexbuffer);
-	glDeleteBuffers(1, &colorbuffer);
-	glDeleteBuffers(1, &vertexbufferRoue);
-	glDeleteBuffers(1, &colorbufferRoue);
+	glDeleteBuffers(1, &blender);
+	glDeleteBuffers(1, &colorblender);
+	glDeleteBuffers(1, &roueBlender);
+	glDeleteBuffers(1, &colorRoueBlender);
+	glDeleteBuffers(1, &vertexbufferfloor);
+	glDeleteBuffers(1, &colorbufferfloor);
 
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
