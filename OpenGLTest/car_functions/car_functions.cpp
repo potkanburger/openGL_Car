@@ -1,5 +1,7 @@
 #include <car_functions.h>
 
+
+// Fonction LoadShaders du tutoriel opengl-tutorial.org
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path){
 
 	// Create the shaders
@@ -94,6 +96,11 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 	return ProgramID;
 }
 
+
+/*
+Une premiere fonction de collision, naïve et très peu précise non utilisée dans le programme
+Cette fonction détermine des rectangles 3d qui contiennent respectivement l'objet et l'obstacle puis compare dans le meme repere les valeurs en x, y, pour chercher au moins une intersection par axe
+*/
 bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[]){
 	float bound_obs_min_x = obstacle[0];
 	float bound_obs_min_y = obstacle[1];
@@ -136,14 +143,31 @@ bool collision(const GLfloat objet[], glm::mat4 MVP_obj, const GLfloat obstacle[
 
 }
 
-bool collision2(obs voiture, glm::mat4 MVP_obj, obs obstacle){// détection de collisions de sphères 
+
+/*
+	Collisions par boundaries spheres.
+	Si la distance (carrée) entre voiture et obstacle est inférieure a la somme des carrés des rayons des spheres, alors l'intersection des 2 spheres n'est pas nulle.
+	Il y a donc un risque de collision effective.
+*/
+bool collision2(obs voiture, glm::mat4 MVP_obj, vector<obs> obstacles, int* collision){// détection de collisions de sphères 
+	int counter = 0;
+	for (obs obstacle : obstacles){
+		glm::vec4 tmp;
+		tmp = MVP_obj*voiture.centre;
+		float distance = pow(tmp.x - obstacle.centre.x, 2) + pow(tmp.y - obstacle.centre.y, 2) + pow(tmp.z - obstacle.centre.z, 2);
+		if (distance <= pow(voiture.rayon + obstacle.rayon, 2)){
+			*collision = counter;
+			return true;
+		}
+		counter++;
+	}
 	
-	glm::vec4 tmp;
-	tmp = MVP_obj*voiture.centre;
-	float distance = pow(tmp.x - obstacle.centre.x, 2) + pow(tmp.y - obstacle.centre.y, 2) + pow(tmp.z - obstacle.centre.z, 2);
-	return distance<=pow(voiture.rayon+obstacle.rayon, 2);
+	return false;
 }
 
+/*
+	obtention et stockage du centre et du rayon (max) d'un objet.
+*/
 void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4 *centre){
 	float bound_obs_min_x = obstacle[0];
 	float bound_obs_min_y = obstacle[1];
@@ -176,7 +200,11 @@ void get_centre_rayon(const GLfloat obstacle[], float* rayon, glm::vec4 *centre)
 	*centre = glm::vec4(bound_obs_min_x + ((bound_obs_max_x - bound_obs_min_x) / 2), bound_obs_min_y + ((bound_obs_max_y - bound_obs_min_y) / 2), bound_obs_min_z + ((bound_obs_max_z - bound_obs_min_z) / 2), 1.0f);
 }
 
+/*
+Fonction qui nous permet de recupérer les 2 cotês n'etant pas l'hypothenuse du triangle rectangle formé par les 3 points en entrée.
+Ainsi, on obtient les couples de points formant la largeur et ceux formant la longueur du rectangle.
 
+*/
 void getTwoSidesOfRectangle(const GLfloat rectangle[], couplePoints* coupleLargeur, couplePoints* coupleLongueur){
 	glm::vec3 pt1 = glm::vec3(rectangle[0], rectangle[1], rectangle[2]);
 	glm::vec3 pt2 = glm::vec3(rectangle[3], rectangle[4], rectangle[5]);
@@ -222,11 +250,26 @@ void getTwoSidesOfRectangle(const GLfloat rectangle[], couplePoints* coupleLarge
 	*coupleLongueur = tabCouples[longueur];
 }
 
+
+/*
+	Renvoie le carré de la distance entre 2 points
+*/
 float distanceCarree(glm::vec3 ptA, glm::vec3 ptB){
 	return pow(ptA.x - ptB.x, 2) + pow(ptA.y - ptB.y, 2) + pow(ptA.z - ptB.z, 2);
 }
 
-bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, const GLfloat obstacle[]){
+
+/*
+	Fonction de collision fine entre un objet (mobile) et un obstacle fixe
+	On obtient la longueur et la largeur des 2 rectangles (hitbox des objets)
+	Pour chaque rectangle:
+		on prend un des côté, on projete l'autre rectangle sur l'axe parallele a ce coté. On regarde si il y a intersection entre le projeté du coté sur cet axe et les minima et maxima du projeté de l'autre rectangle sur cet axe.
+		on fait la meme opération pour le 2eme coté.
+	fin pour;
+	Si on a 4 intersections, alors il y a collision.
+	Il suffit d'un coté d'un rectangle sans intersection pour qu'il n'y ait pas collision.
+*/
+bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, GLfloat obstacle[]){
 	couplePoints largeurA, longueurA;
 	couplePoints largeurB, longueurB;
 	float pente,alpha_angle;
@@ -250,6 +293,7 @@ bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, const GL
 
 
 	for (int i = 0; i < 4; i++){
+		// Si les 2 rectangles sont dans le meme repere, alors la projection n'est qu'un bon approché produit des imperfections. On gère le cas à part, ce qui en plus nous economise des calculs.
 		if ((longueursTests[i].pointB.x - longueursTests[i].pointA.x) == 0.0f){
 			if (i < 2){
 				objA = obstacle;
@@ -374,6 +418,11 @@ bool collisionFine(const GLfloat voitureOriginale[], glm::mat4 MVP_obj, const GL
 }
 
 
+
+/*
+	Notre fonction de loading d'objets blender. Les faces sont triangulées lors de l'export, on recupere seulement les differents points et les faces, puis on combine les points pour former un vector de points compatibles avec le reste du projet.
+
+*/
 std::vector<glm::vec3> objLoader(string fichier){
 	ifstream file(fichier.c_str(), ios::in);
 	string c =  "v ";
@@ -427,4 +476,3 @@ std::vector<glm::vec3> objLoader(string fichier){
 	}
 	return vertices;
 }
-
